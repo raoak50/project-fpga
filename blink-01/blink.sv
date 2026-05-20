@@ -1,0 +1,13 @@
+module blink(
+    input wire clk,
+    output reg led
+);
+
+reg [24:0] counter;
+
+always_ff @(posedge clk) begin
+    counter <= counter + 1;
+    led <= counter[24];
+end
+
+endmodule
