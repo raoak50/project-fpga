@@ -28,10 +28,11 @@ module uart_rx (
   always_ff @(posedge clk) begin
     if (rst) begin
       current_state <= IDLE;
-      bit_index <= 7;
+      bit_index <= 0;
       tick_counter <= 0;
       data_shifter <= 0;
       baud_counter <= 0;
+      data_valid <= 0;
     end else begin
       if (baud_tick) baud_counter <= 0;
       else baud_counter <= baud_counter + 1;
@@ -39,27 +40,33 @@ module uart_rx (
       if (baud_tick) begin
         case (current_state)
           IDLE: begin
+            data_valid <= 0;
+            tick_counter <= 0;
+            bit_index <= 0;
+            baud_counter <= 0;
+            data_shifter <= 0;
+
             if (rx == 0) begin
               current_state <= START;
-              tick_counter <= 0;
-              bit_index <= 7;
             end
           end
           START: begin
             if (tick_counter == 7) begin
               current_state <= DATA;
+              tick_counter  <= 0;
+            end else begin
+              tick_counter <= tick_counter + 1;
             end
-            tick_counter <= tick_counter + 1;
           end
           DATA: begin
             if (tick_counter == 15) begin
               data_shifter[bit_index] <= rx;
               tick_counter <= 0;
-              if (bit_index == 0) begin
+              if (bit_index == 7) begin
                 current_state <= STOP;
               end else begin
                 current_state <= DATA;
-                bit_index <= bit_index - 1;
+                bit_index <= bit_index + 1;
               end
             end else begin
               tick_counter <= tick_counter + 1;
