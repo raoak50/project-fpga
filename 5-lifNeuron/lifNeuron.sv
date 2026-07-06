@@ -7,38 +7,46 @@ module lifNeuron (
     output logic outSpike
 );
 
-  logic [5:0] weight;
+  localparam logic [5:0] WEIGHT = 6'd4;
+  localparam logic [5:0] THRESHOLD = 6'd10;
 
   logic [5:0] membranePotential;
 
   logic nextSpike;
   logic [5:0] nextPotential;
 
-  initial begin
-    weight = 4;
-  end
-
   always_comb begin
     nextPotential = membranePotential;
-    nextSpike = outSpike;
-    if (inSpike && membranePotential < 10) begin
-      nextPotential = membranePotential + weight;
-    end else if (membranePotential >= 10 && inSpike) begin
-      nextSpike = 1;
-      nextPotential = 0;
+    nextSpike = 1'b0;
+
+    //integrate
+    if (inSpike) begin
+      if (membranePotential > (6'd63 - WEIGHT)) begin
+        nextPotential = 6'd63;
+      end else begin
+        nextPotential = membranePotential + WEIGHT;
+      end
+    end
+
+    //leak
+    if (nextPotential > 6'd0) begin
+      nextPotential = nextPotential - 6'd1;
+    end
+
+    //fire
+    if (nextPotential >= THRESHOLD) begin
+      nextSpike = 1'b1;
+      nextPotential = 6'd0;
     end
   end
 
   always_ff @(posedge clk) begin
-    if (resetn) begin
-      outSpike <= 0;
-      membranePotential <= 0;
-    end else if (inSpike) begin
+    if (!resetn) begin
+      outSpike <= 1'b0;
+      membranePotential <= 6'd0;
+    end else begin
       outSpike <= nextSpike;
       membranePotential <= nextPotential;
-    end else begin
-      membranePotential <= membranePotential;
-      if (membranePotential > 0) membranePotential <= membranePotential - 1;
     end
   end
 

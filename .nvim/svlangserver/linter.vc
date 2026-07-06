@@ -2,7 +2,9 @@
 +incdir+/home/anishr/dev/FPGA/2-buttons
 +incdir+/home/anishr/dev/FPGA/3-dimLed
 +incdir+/home/anishr/dev/FPGA/4-UART
++incdir+/home/anishr/dev/FPGA/5-lifNeuron
 +incdir+/home/anishr/dev/FPGA/1-blink
 +incdir+/home/anishr/dev/FPGA/2-buttons
 +incdir+/home/anishr/dev/FPGA/3-dimLed
 +incdir+/home/anishr/dev/FPGA/4-UART
++incdir+/home/anishr/dev/FPGA/5-lifNeuron
