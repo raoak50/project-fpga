@@ -2,12 +2,11 @@ module lifNeuron (
     input logic clk,
     input logic resetn,
 
-    input logic inSpike,
+    input logic [5:0] inWeight,
 
     output logic outSpike
 );
 
-  localparam logic [5:0] WEIGHT = 6'd4;
   localparam logic [5:0] THRESHOLD = 6'd10;
 
   logic [5:0] membranePotential;
@@ -20,11 +19,11 @@ module lifNeuron (
     nextSpike = 1'b0;
 
     //integrate
-    if (inSpike) begin
-      if (membranePotential > (6'd63 - WEIGHT)) begin
+    if (inWeight > 0) begin
+      if (membranePotential > (6'd63 - inWeight)) begin
         nextPotential = 6'd63;
       end else begin
-        nextPotential = membranePotential + WEIGHT;
+        nextPotential = membranePotential + inWeight;
       end
     end
 

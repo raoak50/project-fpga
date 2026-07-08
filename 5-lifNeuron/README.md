@@ -1,0 +1,3 @@
+lifNeuron works completely as expected...
+It follows a Integrate -> Leak -> Fire order
+Only has one i/o spike parameter (may need to update this at a later point)
