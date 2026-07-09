@@ -6,7 +6,7 @@ module lifSynapse (
   logic [5:0] currentWeight;
 
   initial begin
-    currentWeight = 6'd4;
+    currentWeight = 6'd7;
   end
 
   always_comb begin
