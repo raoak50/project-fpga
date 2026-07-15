@@ -1,68 +1,74 @@
 `timescale 1ns / 1ps
 
-module tb_lifNetwork ();
+module tb_lifNetwork;
+
+  localparam int NUM_NEURONS = 4;
+  localparam int DATA_WIDTH = 6;
 
   logic clk;
   logic resetn;
-  logic inSpike;
-  logic outSpike;
 
-  lifNetwork uut (
+  logic inSpike [NUM_NEURONS];
+  logic outSpike[NUM_NEURONS];
+
+  lifNetwork #(
+      .NUM_NEURONS(NUM_NEURONS),
+      .DATA_WIDTH (DATA_WIDTH)
+  ) dut (
       .clk(clk),
       .resetn(resetn),
       .inSpike(inSpike),
       .outSpike(outSpike)
   );
 
-  // 100 MHz clock
-  initial begin
-    clk = 0;
-    forever #5 clk = ~clk;
-  end
+  initial clk = 0;
+  always #5 clk = ~clk;
 
-  // Dump waveforms for GTKWave
   initial begin
+
     $dumpfile("lifNetwork.vcd");
     $dumpvars(0, tb_lifNetwork);
-  end
 
-  initial begin
+    resetn = 0;
 
-    // Initial values
-    resetn  = 0;
-    inSpike = 0;
+    foreach (inSpike[i]) inSpike[i] = 0;
 
-    // Hold reset for a few clocks
-    repeat (3) @(posedge clk);
+    repeat (2) @(posedge clk);
+
     resetn = 1;
 
-    // -------------------------
-    // Single spike
-    // -------------------------
     @(posedge clk);
-    inSpike = 1;
+    inSpike[0] = 1;
 
     @(posedge clk);
-    inSpike = 0;
+    inSpike[0] = 0;
 
-    // Wait for leak
     repeat (10) @(posedge clk);
 
-    // -------------------------
-    // Burst of spikes
-    // -------------------------
-    repeat (10) begin
-      @(posedge clk);
-      inSpike = 1;
+    @(posedge clk);
+    inSpike[1] = 1;
+    inSpike[2] = 1;
 
+    @(posedge clk);
+    inSpike[1] = 0;
+    inSpike[2] = 0;
+
+    repeat (20) @(posedge clk);
+
+    repeat (20) begin
       @(posedge clk);
-      inSpike = 0;
+
+      foreach (inSpike[i]) inSpike[i] = ($urandom_range(0, 1) != 0);
     end
 
-    // Allow activity to propagate
+    @(posedge clk);
+
+    foreach (inSpike[i]) inSpike[i] = 0;
+
     repeat (20) @(posedge clk);
 
     $finish;
+
   end
 
 endmodule

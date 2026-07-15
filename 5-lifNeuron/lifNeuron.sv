@@ -1,18 +1,23 @@
-module lifNeuron (
+module lifNeuron #(
+    parameter int DATA_WIDTH = 6,
+    parameter logic [DATA_WIDTH-1:0] THRESHOLD = 10,
+    parameter logic [DATA_WIDTH-1:0] LEAK = 1,
+    parameter logic [DATA_WIDTH-1:0] RESET_POTENTIAL = '0
+
+) (
     input logic clk,
     input logic resetn,
 
-    input logic [5:0] inWeight,
+    input logic [DATA_WIDTH-1:0] inWeight,
 
     output logic outSpike
 );
 
-  localparam logic [5:0] THRESHOLD = 6'd10;
 
-  logic [5:0] membranePotential;
+  logic [DATA_WIDTH-1:0] membranePotential;
 
   logic nextSpike;
-  logic [5:0] nextPotential;
+  logic [DATA_WIDTH-1:0] nextPotential;
 
   always_comb begin
     nextPotential = membranePotential;
@@ -20,8 +25,8 @@ module lifNeuron (
 
     //integrate
     if (inWeight > 0) begin
-      if (membranePotential > (6'd63 - inWeight)) begin
-        nextPotential = 6'd63;
+      if (membranePotential > (((2 ** DATA_WIDTH) - 1) - inWeight)) begin
+        nextPotential = (2 ** DATA_WIDTH) - 1;
       end else begin
         nextPotential = membranePotential + inWeight;
       end
@@ -29,13 +34,13 @@ module lifNeuron (
 
     //leak
     if (nextPotential > 6'd0) begin
-      nextPotential = nextPotential - 6'd1;
+      nextPotential = nextPotential - LEAK;
     end
 
     //fire
     if (nextPotential >= THRESHOLD) begin
       nextSpike = 1'b1;
-      nextPotential = 6'd0;
+      nextPotential = RESET_POTENTIAL;
     end
   end
 

@@ -1,71 +1,60 @@
-module lifNetwork (
+module lifNetwork #(
+    parameter int NUM_NEURONS = 64,
+    parameter int DATA_WIDTH  = 6
+) (
     input  logic clk,
     input  logic resetn,
-    input  logic inSpike,
-    output logic outSpike
+    input  logic inSpike [NUM_NEURONS],
+    output logic outSpike[NUM_NEURONS]
 );
 
-  logic [5:0] neuron1Weight;
-  logic neuron1Out;
-  logic [5:0] neuron2Weight;
-  logic neuron2Out;
-  logic [5:0] neuron3Weight;
-  logic neuron3Out;
-  logic [5:0] neuron4Weight1;
-  logic [5:0] neuron4Weight2;
+  localparam int SUMWIDTH = DATA_WIDTH + $clog2(NUM_NEURONS);
 
-  lifSynapse synapse1 (
-      .inSpike(inSpike),
-      .weight (neuron1Weight)
-  );
+  logic networkSpikes[NUM_NEURONS];
+  logic [DATA_WIDTH-1:0] contributions[NUM_NEURONS][NUM_NEURONS];
+  logic [SUMWIDTH-1:0] synapticWeights[NUM_NEURONS];
 
-  lifNeuron neuron1 (
-      .clk(clk),
-      .resetn(resetn),
-      .inWeight(neuron1Weight),
-      .outSpike(neuron1Out)
-  );
+  genvar i;
+  genvar j;
+  genvar k;
 
-  lifSynapse synapse2 (
-      .inSpike(neuron1Out),
-      .weight (neuron2Weight)
-  );
+  generate
+    for (i = 0; i < NUM_NEURONS; i++) begin : gen_neurons
+      lifNeuron #(
+          .DATA_WIDTH(DATA_WIDTH),
+          .THRESHOLD(32),
+          .LEAK(4),
+          .RESET_POTENTIAL(0)
+      ) neuron (
+          .clk(clk),
+          .resetn(resetn),
+          .inWeight(DATA_WIDTH'(synapticWeights[i])),
+          .outSpike(networkSpikes[i])
+      );
+      for (j = 0; j < NUM_NEURONS; j++) begin : gen_synapses
+        lifSynapse #(
+            .DATA_WIDTH(DATA_WIDTH),
+            .WEIGHT(4),
+            .RESET_WEIGHT(0)
+        ) synapse (
+            .inSpike(networkSpikes[i] | inSpike[i]),
+            .weight (contributions[i][j])
+        );
+      end
+    end
 
-  lifSynapse synapse3 (
-      .inSpike(neuron1Out),
-      .weight (neuron3Weight)
-  );
 
-  lifNeuron neuron2 (
-      .clk(clk),
-      .resetn(resetn),
-      .inWeight(neuron2Weight),
-      .outSpike(neuron2Out)
-  );
+    for (k = 0; k < NUM_NEURONS; k++) begin : gen_accumulator
+      lifAccumulator #(
+          .DATA_WIDTH(DATA_WIDTH),
+          .NUM_INPUTS(NUM_NEURONS)
+      ) accumulator (
+          .inputWeights(contributions[k]),
+          .weightSum(synapticWeights[k])
+      );
+    end
+  endgenerate
 
-  lifNeuron neuron3 (
-      .clk(clk),
-      .resetn(resetn),
-      .inWeight(neuron3Weight),
-      .outSpike(neuron3Out)
-  );
-
-  lifSynapse synapse4 (
-      .inSpike(neuron2Out),
-      .weight (neuron4Weight1)
-  );
-
-  lifSynapse synapse5 (
-      .inSpike(neuron3Out),
-      .weight (neuron4Weight2)
-  );
-
-  lifNeuron neuron4 (
-      .clk(clk),
-      .resetn(resetn),
-      .inWeight(neuron4Weight1 + neuron4Weight2),
-      .outSpike(outSpike)
-  );
-
+  assign outSpike = networkSpikes;
 
 endmodule

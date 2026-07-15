@@ -1,18 +1,16 @@
-module lifSynapse (
+module lifSynapse #(
+    parameter int DATA_WIDTH = 6,
+    parameter logic [DATA_WIDTH-1:0] WEIGHT = 7,
+    parameter logic [DATA_WIDTH-1:0] RESET_WEIGHT = 0
+) (
     input logic inSpike,
-    output logic [5:0] weight
+    output logic [DATA_WIDTH-1:0] weight
 );
-
-  logic [5:0] currentWeight;
-
-  initial begin
-    currentWeight = 6'd7;
-  end
 
   always_comb begin
     if (inSpike) begin
-      weight = currentWeight;
-    end else weight = 6'd0;
+      weight = WEIGHT;
+    end else weight = RESET_WEIGHT;
   end
 
 endmodule
