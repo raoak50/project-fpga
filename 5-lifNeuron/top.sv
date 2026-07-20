@@ -2,17 +2,19 @@ module top (
     input logic clk,
     input logic resetn,
     input logic button,
-    output logic led[4]
+    output logic [3:0] led
 );
 
-  logic spikes[4];
-  logic neuronSpikes[4];
+  logic [3:0] spikes;
+  logic [3:0] neuronSpikes;
 
   logic previous_button;
   logic button_pressed;
   logic button_db;
 
-  debouncer debounce (
+  debouncer #(
+      .COUNT_MAX(2_500_000)
+  ) debounce (
       .clk(clk),
       .resetn(resetn),
       .button_in(button),
@@ -24,8 +26,8 @@ module top (
       previous_button <= 1'b1;
       button_pressed  <= 1'b0;
     end else begin
-      button_pressed  <= previous_button && !button_db;
       previous_button <= button_db;
+      button_pressed  <= previous_button && !button_db;
     end
   end
 
@@ -44,28 +46,36 @@ module top (
       .outSpike(neuronSpikes)
   );
 
-  ledPulseStretcher led0 (
+  ledPulseStretcher #(
+      .COUNT_MAX(10_000_000)
+  ) led0 (
       .clk(clk),
       .resetn(resetn),
       .spike(neuronSpikes[0]),
       .led(led[0])
   );
 
-  ledPulseStretcher led1 (
+  ledPulseStretcher #(
+      .COUNT_MAX(10_000_000)
+  ) led1 (
       .clk(clk),
       .resetn(resetn),
       .spike(neuronSpikes[1]),
       .led(led[1])
   );
 
-  ledPulseStretcher led2 (
+  ledPulseStretcher #(
+      .COUNT_MAX(10_000_000)
+  ) led2 (
       .clk(clk),
       .resetn(resetn),
       .spike(neuronSpikes[2]),
       .led(led[2])
   );
 
-  ledPulseStretcher led3 (
+  ledPulseStretcher #(
+      .COUNT_MAX(10_000_000)
+  ) led3 (
       .clk(clk),
       .resetn(resetn),
       .spike(neuronSpikes[3]),
